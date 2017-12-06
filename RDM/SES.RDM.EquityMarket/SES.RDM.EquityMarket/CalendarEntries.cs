@@ -10,7 +10,7 @@ namespace SES.RDM.EquityMarket
     {
         #region private
         private string calendarID;
-        private DateTime calendarDate;
+        private DateTime? calendarDate;
         private string description;
         private bool tradingAllowed;
         private bool earlyClose;
@@ -26,7 +26,7 @@ namespace SES.RDM.EquityMarket
         /// <summary>
         /// Defines the date for which the public holiday is being specified.
         /// </summary>
-        public DateTime CalendarDate { get { return calendarDate; } set { if (calendarDate != value) { calendarDate = value; OnPropertyChanged(nameof(CalendarDate)); } } }
+        public DateTime? CalendarDate { get { return calendarDate; } set { if (calendarDate != value) { calendarDate = value; OnPropertyChanged(nameof(CalendarDate)); } } }
 
         /// <summary>
         /// Human readable description of the public holiday.
@@ -57,12 +57,30 @@ namespace SES.RDM.EquityMarket
         }
         public CalendarEntries Decode(object value)
         {
-            string[] reault = CSV.Split(value as string);
-            return new CalendarEntries();
+            try
+            {
+                string[] data = CSV.Split(value as string);
 
+                if (data.Length != 6)
+                {
+                    throw new Exception("Calendar Entries do not contain 6 fields ");
+                }
+
+                CalendarEntries result = new CalendarEntries();
+                result.CalendarID = CSV.ToString(data[0]);
+                result.CalendarDate = CSV.ToDateTime(data[1]);
+                result.Description = CSV.ToString(data[2]);
+                result.TradingAllowed = CSV.ToBool(data[3]);
+                result.EarlyClose = CSV.ToBool(data[4]);
+                result.FuturesCloseOutDay = CSV.ToBool(data[5]);
+                return result;
+            }
+
+            catch (Exception ex)
+            {
+                throw new InvalidCastException("Calendar Entries decode failed", ex);
+            }
         }
-
-
         #endregion
     }
 }
